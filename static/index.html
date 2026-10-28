@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A.I - Article Investment</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <div class="logo">
+                <h1><a href="/"><span style="color: #FF8A00; font-weight:700;">A.I</span> <span style="font-size:16px; font-weight:400;">Article Investment</span></a></h1>
+            </div>
+            <nav class="app-nav">
+                <ul>
+                    <li class="nav-item active" data-tab="news">Feed</li>
+                    <li class="nav-item" data-tab="strategy">Summary / Insight</li>
+                    <li class="nav-item" data-tab="research">Deep Research</li>
+                </ul>
+            </nav>
+            <div class="header-actions">
+                <button id="reload-btn" class="btn-icon">
+                    <span class="material-symbols-outlined">refresh</span>
+                </button>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div id="tab-news" class="tabpanel active">
+                <!-- 뉴스 로딩 진행률 바 -->
+                <div id="newsProgressContainer" class="progress-container hidden">
+                    <div class="progress-header">
+                        <span class="progress-label">뉴스 로딩 중...</span>
+                        <span class="progress-count">0/0</span>
+                    </div>
+                    <div class="progress-bar-wrapper">
+                        <div id="newsProgressBar" class="progress-bar"></div>
+                    </div>
+                </div>
+                
+                <div id="newsStatus" class="status-text">최신 뉴스를 불러오는 중...</div>
+                <div id="newsList" class="card-grid"></div>
+            </div>
+
+            <div id="tab-strategy" class="tabpanel">
+                 <div class="panel-header-strategy">
+                    <h2>Summary / Insight</h2>
+                    <button id="btnGenerateStrategy" class="btn-primary" disabled>
+                        <span class="material-symbols-outlined">lightbulb</span> 인사이트 생성
+                    </button>
+                </div>
+                 <p class="panel-desc">Feed 탭에서 최대 3개의 뉴스를 선택하고 '인사이트 생성' 버튼을 누르세요.</p>
+                
+                <!-- Summary 분석 진행률 바 -->
+                <div id="strategyProgressContainer" class="progress-container hidden">
+                    <div class="progress-header">
+                        <span class="progress-label">AI 분석 중...</span>
+                        <span class="progress-count">0/4</span>
+                    </div>
+                    <div class="progress-bar-wrapper">
+                        <div id="strategyProgressBar" class="progress-bar"></div>
+                    </div>
+                    <div id="strategyProgressSteps" class="progress-steps"></div>
+                </div>
+                
+                <div id="strategyResult" class="strategy-layout">
+                    </div>
+
+                <div class="selected-news-section">
+                    <h3>분석 대상 뉴스</h3>
+                    <div id="selectedNewsList" class="card-grid-mini">
+                        <p class="placeholder-text">선택된 뉴스가 없습니다.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-research" class="tabpanel">
+                <div class="panel-header-simple">
+                    <h2>AI 리서치</h2>
+                </div>
+                
+                <!-- 리서치 설정 -->
+                <div class="research-config">
+                    <div class="input-group">
+                        <input type="text" id="researchQuery" placeholder="리서치 주제 입력 (예: 2차 전지 시장 전망)">
+                        <select id="researchFeedbackLoops">
+                            <option value="3">피드백 루프 3회</option>
+                            <option value="5" selected>피드백 루프 5회</option>
+                            <option value="7">피드백 루프 7회</option>
+                        </select>
+                    </div>
+                    <div class="research-options">
+                        <label class="switch">
+                            <input type="checkbox" id="agentic-switch">
+                            <span class="slider"></span>
+                        </label>
+                        <label for="agentic-switch">심층 검색 활성화 (Agentic Search)</label>
+                    </div>
+                    <button id="btnLoadResearch" class="btn-primary btn-full-width">리서치 시작</button>
+                </div>
+                
+                <!-- 리서치 대시보드 -->
+                <div id="research-dashboard" class="research-dashboard hidden">
+                    <!-- 상단 통계 -->
+                    <div class="dashboard-stats">
+                        <div class="stat-card">
+                            <div class="stat-icon">📊</div>
+                            <div class="stat-content">
+                                <div class="stat-value" id="total-sources">0</div>
+                                <div class="stat-label">총 정보원</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">⏱️</div>
+                            <div class="stat-content">
+                                <div class="stat-value" id="analysis-time">0</div>
+                                <div class="stat-label">분석 시간 (초)</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">🔍</div>
+                            <div class="stat-content">
+                                <div class="stat-value" id="current-phase">준비 중</div>
+                                <div class="stat-label">현재 단계</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 메인 콘텐츠 영역 -->
+                    <div class="dashboard-main">
+                        <!-- 좌측: 수집된 데이터 -->
+                        <div class="dashboard-left">
+                            <div class="dashboard-section">
+                                <h3><span class="material-symbols-outlined">newspaper</span>수집된 뉴스 기사</h3>
+                                <div id="collected-news" class="source-list"></div>
+                            </div>
+                            <div class="dashboard-section">
+                                <h3><span class="material-symbols-outlined">search</span>웹 검색 결과</h3>
+                                <div id="collected-web-results" class="source-list"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- 우측: 분석 과정 및 결과 -->
+                        <div class="dashboard-right">
+                            <div class="dashboard-section">
+                                <h3><span class="material-symbols-outlined">timeline</span>분석 과정</h3>
+                                <div id="analysis-timeline" class="timeline"></div>
+                            </div>
+                            <div class="dashboard-section">
+                                <h3><span class="material-symbols-outlined">lightbulb</span>핵심 인사이트</h3>
+                                <div id="key-insights" class="insights-content"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 하단: 최종 보고서 -->
+                    <div class="dashboard-bottom">
+                        <div class="dashboard-section">
+                            <h3><span class="material-symbols-outlined">description</span>최종 보고서</h3>
+                            <div id="final-report" class="report-content"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Toast 알림 -->
+    <div id="toast" class="toast"></div>
+    
+    <script src="/static/main.js"></script>
+</body>
+</html>
